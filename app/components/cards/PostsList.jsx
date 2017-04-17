@@ -8,6 +8,8 @@ import {findParent} from 'app/utils/DomUtils';
 import Icon from 'app/components/elements/Icon';
 import shouldComponentUpdate from 'app/utils/shouldComponentUpdate';
 import { IGNORE_TAGS } from 'config/client_config';
+import {encode} from 'app/utils/helpers';
+import { isPostVisited, getVisitedPosts, visitPost } from 'app/utils/helpers';
 
 function topPosition(domElt) {
     if (!domElt) {
@@ -39,7 +41,8 @@ class PostsList extends React.Component {
             thumbSize: 'desktop',
             showNegativeComments: false,
             nsfwPref: 'warn',
-            showPost: null
+            showPost: null,
+            visitedPosts : []
         }
         this.scrollListener = this.scrollListener.bind(this);
         this.onPostClick = this.onPostClick.bind(this);
@@ -88,6 +91,13 @@ class PostsList extends React.Component {
             window.history.pushState({}, '', this.props.pathname);
             document.getElementsByTagName('body')[0].className = '';
             this.post_url = null;
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        const visited = getVisitedPosts();
+        if (this.state.visitedPosts != visited) {
+            this.setState({visitedPosts: visited});
         }
     }
 
@@ -172,6 +182,7 @@ class PostsList extends React.Component {
         this.props.removeHighSecurityKeys();
         this.setState({showPost: post, prevTitle: window.document.title});
         window.history.pushState({}, '', url);
+        visitPost(post);
     }
 
     render() {
@@ -209,6 +220,7 @@ class PostsList extends React.Component {
                 authorRepLog10={item.authorRepLog10}
                 onClick={this.onPostClick}
                 nsfwPref={nsfwPref}
+                visited={isPostVisited(item.item)}
             />
         </li>)
 
